@@ -12,8 +12,7 @@
 #ifndef IO_HPP
 #define IO_HPP
 
-#include <Array.h>
-#include <assert.h>
+#include <Arduino.h>
 
 class IO
 {
