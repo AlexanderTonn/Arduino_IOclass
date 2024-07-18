@@ -45,9 +45,12 @@ private:
     auto writeAll() -> void;
     uint16_t mRawData[MAX_PIN_COUNT]; // Array for storing the raw data from the pins or the data which should be written to the pins
 
+    auto fmap(const float, const float, const float, const float, const float) -> float;
+    
+
     private:
     auto setPinMode(const uint8_t, const mode) -> void;
-    auto getValue(const uint8_t) -> int32_t;
+    auto getValue(const uint8_t) -> int;
     auto printSerial(String) -> void; 
 };
 
