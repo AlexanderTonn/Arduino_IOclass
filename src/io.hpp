@@ -35,7 +35,8 @@ private:
         DIGITAL_OUT ,
         ANALOG_IN ,
         ANALOG_OUT ,
-        BUS
+        ANALOG_IN_PULLUP,
+        DIGITAL_IN_PULLUP
     };
 
     auto reservePin(const uint8_t, mode) -> bool;

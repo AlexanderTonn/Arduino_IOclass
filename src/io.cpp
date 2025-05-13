@@ -42,12 +42,14 @@ auto IO::getValue(const uint8_t pin) -> int
     int ret = 0;
     switch (pinMode)
     {
-    case static_cast<uint8_t>(mode::DIGITAL_IN):
+    case static_cast<uint8_t>(mode::DIGITAL_IN_PULLUP):
+    case static_cast<uint8_t>(mode::DIGITAL_IN): 
         ret = digitalRead(pin);
         break;
     case static_cast<uint8_t>(mode::DIGITAL_OUT):
         break;
-    case static_cast<uint8_t>(mode::ANALOG_IN):
+    case static_cast<uint8_t>(mode::ANALOG_IN_PULLUP):
+    case static_cast<uint8_t>(mode::ANALOG_IN) : 
         ret = analogRead(pin);
         break;
     case static_cast<uint8_t>(mode::ANALOG_OUT):
@@ -122,7 +124,9 @@ auto IO::setPinMode(const uint8_t pin, const mode _pinMode) -> void
         break;
     case mode::ANALOG_OUT:
         break;
-    case mode::BUS:
+    case mode::ANALOG_IN_PULLUP:
+    case mode::DIGITAL_IN_PULLUP:
+        pinMode(pin, INPUT_PULLUP);
         break;
     default:
         break;
