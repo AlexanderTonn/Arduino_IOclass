@@ -143,7 +143,7 @@ auto IO::readAll() -> void
         if(!mPinAssigned[i])
             continue; 
         
-        if (mPinAssigned[i] == true && (mPinMode[i] == static_cast<uint8_t>(mode::ANALOG_IN) || mPinMode[i] == static_cast<uint8_t>(mode::DIGITAL_IN)))
+        if (mPinAssigned[i] == true && (mPinMode[i] == static_cast<uint8_t>(mode::ANALOG_IN) || mPinMode[i] == static_cast<uint8_t>(mode::DIGITAL_IN) || (mPinMode[i] == static_cast<uint8_t>(mode::ANALOG_IN_PULLUP) || mPinMode[i] == static_cast<uint8_t>(mode::DIGITAL_IN_PULLUP))))
             {
                 mRawData[i] = getValue(i);
             }
