@@ -117,12 +117,11 @@ auto IO::setPinMode(const uint8_t pin, const mode _pinMode) -> void
     case mode::DIGITAL_IN:
         pinMode(pin, INPUT);
         break;
+    case mode::ANALOG_OUT;
     case mode::DIGITAL_OUT:
         pinMode(pin, OUTPUT);
         break;
     case mode::ANALOG_IN:
-        break;
-    case mode::ANALOG_OUT:
         break;
     case mode::ANALOG_IN_PULLUP:
     case mode::DIGITAL_IN_PULLUP:
