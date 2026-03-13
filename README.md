@@ -9,84 +9,56 @@ This is a library to handle the IO operations on the Arduino. It is designed to 
 
 **Example of defining the pins**
 
-- in this example i stored the pins in a file called `pinMapping.h` and i declared the variables as `PROGMEM` to store them in the flash memory (because the pin Definition will not change during the runtime of the program)
+- in this example i declared the variables as `PROGMEM` to store them in the flash memory (because the pin Definition will not change during the runtime of the program)
 
 ```C++
-constexpr static  uint8_t EXT_FWT_FILL_REQUEST PROGMEM = 22; // Digital Input
-constexpr static  uint8_t BUFFER_TANK_FILL_START PROGMEM = 23;// Digital Input
-
-// ...
-
-constexpr static  uint8_t LED_PLANT_OPERATIONAL PROGMEM = 10; // Digital Output
-
-// ...
-
-constexpr static  uint8_t P_FRESHWATER PROGMEM = A0; // Analog Input
-constexpr static  uint8_t P_CONCENTRATE PROGMEM = A1; // Analog Input
-
-// ...
-
-constexpr static  uint8_t SPI_CS PROGMEM = 53; // SPI Bus Pin | SPI chip select / Slave Select
-constexpr static  uint8_t SPI_COPI PROGMEM = 51; // SPI Bus Pin | SPI MOSI
-constexpr static  uint8_t SPI_SCK PROGMEM = 52; // SPI Bus Pin
-constexpr static  uint8_t SPI_CIPO PROGMEM = 50; // SPI Bus Pin | SPI MISO
+constexpr static uint8_t RELAY1 PROGMEM = 2;
+constexpr static uint8_t RELAY2 PROGMEM = 3;
+constexpr static uint8_t RELAY3 PROGMEM = 4;
 ```
 
-- Now we have to include the `Arduino_IOclass.h` and the `pinMapping.h` in the main file
+- Now we have to include the `io.hpp` 
 - we also have to create an instance of the `IO` class and pass the pinMapping to the setup function
 
 ```C++
-#include <Arduino.h>
-#include <io.hpp>
-#include "pinMapping.hpp"
-
-IO _io;
-
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(9600);
-  
-  _io.reservePin(EXT_FWT_FILL_REQUEST, IO::mode::DIGITAL_IN);
-  _io.reservePin(BUFFER_TANK_FILL_START, IO::mode::DIGITAL_IN);
 
-  _io.reservePin(LED_PLANT_OPERATIONAL, IO::mode::DIGITAL_OUT);
-  
-  _io.reservePin(P_FRESHWATER, IO::mode::ANALOG_IN);
-  _io.reservePin(P_CONCENTRATE, IO::mode::ANALOG_IN);
+  // You declare here which inputs / outputs you want to read / write
+  _io.ActivateValidationError(true);
+  _io.ActivateOutputDelay(true, 500);
+  _io.reservePin(A0, IO::mode::ANALOG_IN);
 
-  // if you use some pins for bus communication you can reserve them as well
-  _io.reservePin(SPI_CS, IO::mode::BUS);
-  _io.reservePin(SPI_COPI, IO::mode::BUS);
-  _io.reservePin(SPI_SCK, IO::mode::BUS);
-  _io.reservePin(SPI_CIPO, IO::mode::BUS);
+  _io.reservePin(RELAY1, IO::mode::DIGITAL_OUT);
+  _io.reservePin(RELAY2, IO::mode::DIGITAL_OUT);
+  _io.reservePin(RELAY3, IO::mode::DIGITAL_OUT);
+
 }
-
-```
-### Reading Values 
-* basically you only have to call ```readAll()``` in the first line of the loop routine
-* the values are stored in the `IO` class and can be accessed directly by using the public member array ```mRawData```
-
-```C++
+// Call readAll() first
+// Call writeAll() last
+// This sequence play safe that you read first all inputs and write all outputs at least
+// This is standard approach for reliable and good maintainable software
 void loop() {
-  // put your main code here, to run repeatedly:
+
   _io.readAll();
   
-  Serial.print("Freshwater Pressure: ");
-  Serial.println(_io.mRawData[P_FRESHWATER]);
-  
-  Serial.print("Concentrate Pressure: ");
-  Serial.println(_io.mRawData[P_CONCENTRATE]);
-  
-  Serial.print("External Freshwater Fill Request: ");
-  Serial.println(_io.mRawData[EXT_FWT_FILL_REQUEST]);
-  
-  Serial.print("Buffer Tank Fill Start: ");
-  Serial.println(_io.mRawData[BUFFER_TANK_FILL_START]);
-  
-  Serial.print("Plant Operational: ");
-  Serial.println(_io.mRawData[LED_PLANT_OPERATIONAL]);
-  
-  delay(1000);
+  // Your code here
+  auto scaled = map(_io.get(A0), 0, 1023, 0, 5000);
+  if (scaled > 3000)
+  {
+    _io.set(RELAY1, HIGH);
+    _io.set(RELAY2, HIGH);
+    _io.set(RELAY3, HIGH);
+  }
+  if (scaled < 1500)
+  {
+    _io.set(RELAY1, LOW);
+    _io.set(RELAY2, LOW);
+    _io.set(RELAY3, LOW);
+  }
+
+  _io.writeAll();
+
 }
 ``` 
 
@@ -94,14 +66,15 @@ void loop() {
 * to write a value to a pin, it's important to you use the ```setValue(const uint8_t, const uint16_t)``` function which is checking if the pin is reserved as an output 
 * in the last line of you ```void loop()``` you call the function ```writeAll()``` which is writing all values to the pins at the same time
 
-```C++
+### Reading Values 
+* basically you only have to call ```readAll()``` in the first line of the loop routine
+* the values are stored in the `IO` class and can be accessed directly by using the `get()` function
 
-void loop() {
+# Special functions
+## ActivateValidationError(const bool)
+* use this function in the `setup()` routine
+* if it set to `true` the function will block the code execution of the programm if a critical configuration error has been detected (e.g. if you try to set Digital Outputs to UART Pins)
 
-  _io.setValue(LED_PLANT_OPERATIONAL, HIGH);
-  _io.setValue(EXT_FWT_FILL_REQUEST, LOW); // this will not be written to the pin because it is reserved as an input
-  _io.writeAll();
-  
-  delay(1000);
-}
-```	
+## ActivateOutputDelay(const bool, const uint32_t)
+* this function is useful if you want to delay the actuation of digitaloutputs
+* this function can reduce power spikes if you try to actuate consumer with high power consumption
